@@ -12,3 +12,12 @@ terraform {
 provider "aws" {
   region = var.aws_region
 }
+
+module "vpc" {
+  source = "./modules/vpc"
+
+  vpc_cidr_block           = var.vpc_cidr_block
+  public_subnet_cidr_block = var.public_subnet_cidr_block
+  public_route_cidr_block  = var.public_route_cidr_block
+  availability_zone        = var.availability_zone
+}
