@@ -57,3 +57,13 @@ output "github_actions_role_arn" {
   description = "IAM role ARN for GitHub Actions OIDC."
   value       = module.github_oidc.role_arn
 }
+
+output "monitoring_sns_topic_arn" {
+  description = "SNS topic ARN for CloudWatch alarm notifications."
+  value       = module.monitoring.sns_topic_arn
+}
+
+output "cloudwatch_dashboard_name" {
+  description = "CloudWatch dashboard name."
+  value       = module.monitoring.dashboard_name
+}

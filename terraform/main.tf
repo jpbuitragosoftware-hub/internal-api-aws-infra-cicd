@@ -117,3 +117,15 @@ module "github_oidc" {
   ecs_service_arn         = module.ecs_app.service_arn
   task_execution_role_arn = module.ecs.execution_role_arn
 }
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  name                  = "internal-api"
+  ecs_cluster_name      = module.ecs.cluster_name
+  ecs_service_name      = module.ecs_app.service_name
+  alb_arn_suffix        = module.alb.arn_suffix
+  target_group_arn_suffix = module.alb.target_group_arn_suffix
+  rds_identifier        = var.rds_identifier
+  notification_email    = var.monitoring_notification_email
+}

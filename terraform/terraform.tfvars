@@ -36,6 +36,7 @@ ecs_image_tag                  = "v1"
 ecs_service_name               = "internal-api-service"
 ecs_desired_count              = 0
 alb_name                       = "api-internal-alb"
+monitoring_notification_email  = "jpbuitrago.software@gmail.com"
 github_deployment_branch       = "main"
 github_repository_subject     = "repo:jpbuitragosoftware-hub@308110730/internal-api-aws-infra-cicd@1380359659:ref:refs/heads/main"
 github_actions_role_name       = "internal-api-github-actions"

@@ -203,6 +203,11 @@ variable "alb_name" {
   type        = string
 }
 
+variable "monitoring_notification_email" {
+  description = "Email address for CloudWatch alarm notifications."
+  type        = string
+}
+
 variable "github_deployment_branch" {
   description = "Branch allowed to deploy through GitHub Actions."
   type        = string
