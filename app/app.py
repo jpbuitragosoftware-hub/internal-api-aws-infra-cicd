@@ -63,9 +63,7 @@ def get_items():
             cursor.execute("SELECT id, name FROM items ORDER BY id")
             items = cursor.fetchall()
 
-        return jsonify(
-            [{"id": item[0], "name": item[1]} for item in items]
-        ), 200
+        return jsonify([{"id": item[0], "name": item[1]} for item in items]), 200
 
     finally:
         connection.close()
