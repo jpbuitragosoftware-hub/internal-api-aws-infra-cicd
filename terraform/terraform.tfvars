@@ -36,3 +36,6 @@ ecs_image_tag                  = "v1"
 ecs_service_name               = "internal-api-service"
 ecs_desired_count              = 0
 ecs_allowed_ingress_cidr       = "0.0.0.0/32"
+github_repository              = "jpbuitragosoftware-hub/internal-api-aws-infra-cicd"
+github_deployment_branch       = "main"
+github_actions_role_name       = "internal-api-github-actions"

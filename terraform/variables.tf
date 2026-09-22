@@ -202,3 +202,18 @@ variable "ecs_allowed_ingress_cidr" {
   description = "CIDR allowed to access the application port."
   type        = string
 }
+
+variable "github_repository" {
+  description = "GitHub repository in owner/name format."
+  type        = string
+}
+
+variable "github_deployment_branch" {
+  description = "Branch allowed to deploy through GitHub Actions."
+  type        = string
+}
+
+variable "github_actions_role_name" {
+  description = "IAM role assumed by GitHub Actions."
+  type        = string
+}

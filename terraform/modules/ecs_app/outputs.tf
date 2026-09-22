@@ -7,3 +7,8 @@ output "service_name" {
   description = "ECS service name."
   value       = aws_ecs_service.this.name
 }
+
+output "service_arn" {
+  description = "ARN of the ECS service."
+  value       = aws_ecs_service.this.id
+}

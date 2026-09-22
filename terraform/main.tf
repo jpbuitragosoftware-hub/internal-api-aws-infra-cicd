@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.6"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
 }
 
@@ -89,4 +93,16 @@ module "ecs_app" {
   service_name            = var.ecs_service_name
   desired_count           = var.ecs_desired_count
   allowed_ingress_cidr    = var.ecs_allowed_ingress_cidr
+}
+
+module "github_oidc" {
+  source = "./modules/github_oidc"
+
+  repository            = var.github_repository
+  branch                = var.github_deployment_branch
+  role_name             = var.github_actions_role_name
+  ecr_repository_arn    = module.ecr.repository_arn
+  ecs_cluster_arn       = module.ecs.cluster_arn
+  ecs_service_arn       = module.ecs_app.service_arn
+  task_execution_role_arn = module.ecs.execution_role_arn
 }

@@ -47,3 +47,8 @@ output "rds_secret_arn" {
   description = "ARN of the database credentials secret."
   value       = module.rds.secret_arn
 }
+
+output "github_actions_role_arn" {
+  description = "IAM role ARN for GitHub Actions OIDC."
+  value       = module.github_oidc.role_arn
+}

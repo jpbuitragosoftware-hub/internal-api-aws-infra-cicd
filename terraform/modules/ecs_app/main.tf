@@ -79,6 +79,10 @@ resource "aws_ecs_service" "this" {
   launch_type      = "FARGATE"
   platform_version = "1.4.0"
 
+  lifecycle {
+    ignore_changes = [task_definition]
+  }
+
   network_configuration {
     subnets          = [var.subnet_id]
     security_groups  = [var.security_group_id]
