@@ -1,5 +1,3 @@
-data "aws_region" "current" {}
-
 data "aws_iam_policy_document" "task_execution_assume_role" {
   statement {
     effect = "Allow"
@@ -44,38 +42,4 @@ resource "aws_security_group" "this" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-resource "aws_ecs_task_definition" "this" {
-  family                   = var.task_family
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = var.task_cpu
-  memory                   = var.task_memory
-  execution_role_arn       = aws_iam_role.task_execution.arn
-
-  container_definitions = jsonencode([
-    {
-      name      = var.container_name
-      image     = "${var.image_repository_url}:${var.image_tag}"
-      essential = true
-
-      portMappings = [
-        {
-          containerPort = var.container_port
-          hostPort      = var.container_port
-          protocol      = "tcp"
-        }
-      ]
-
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.this.name
-          awslogs-region        = data.aws_region.current.name
-          awslogs-stream-prefix = "ecs"
-        }
-      }
-    }
-  ])
 }

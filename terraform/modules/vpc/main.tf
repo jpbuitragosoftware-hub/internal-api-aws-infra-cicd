@@ -28,3 +28,15 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
   subnet_id      = aws_subnet.public.id
 }
+
+resource "aws_subnet" "private_a" {
+  vpc_id            = aws_vpc.this.id
+  cidr_block        = var.private_subnet_a_cidr_block
+  availability_zone = var.private_availability_zone_a
+}
+
+resource "aws_subnet" "private_b" {
+  vpc_id            = aws_vpc.this.id
+  cidr_block        = var.private_subnet_b_cidr_block
+  availability_zone = var.private_availability_zone_b
+}

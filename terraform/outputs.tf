@@ -38,7 +38,12 @@ output "ecs_security_group_id" {
   value       = module.ecs.security_group_id
 }
 
-output "ecs_task_definition_arn" {
-  description = "ARN of the ECS task definition."
-  value       = module.ecs.task_definition_arn
+output "rds_endpoint" {
+  description = "RDS endpoint hostname."
+  value       = module.rds.endpoint
+}
+
+output "rds_secret_arn" {
+  description = "ARN of the database credentials secret."
+  value       = module.rds.secret_arn
 }

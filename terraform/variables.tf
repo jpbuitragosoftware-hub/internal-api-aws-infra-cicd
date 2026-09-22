@@ -23,6 +23,26 @@ variable "availability_zone" {
   type        = string
 }
 
+variable "private_subnet_a_cidr_block" {
+  description = "CIDR block for the first private subnet."
+  type        = string
+}
+
+variable "private_subnet_b_cidr_block" {
+  description = "CIDR block for the second private subnet."
+  type        = string
+}
+
+variable "private_availability_zone_a" {
+  description = "Availability Zone for the first private subnet."
+  type        = string
+}
+
+variable "private_availability_zone_b" {
+  description = "Availability Zone for the second private subnet."
+  type        = string
+}
+
 variable "ecr_repository_name" {
   description = "Name of the ECR repository."
   type        = string
@@ -88,24 +108,69 @@ variable "ecs_security_group_description" {
   type        = string
 }
 
+variable "rds_identifier" {
+  description = "Identifier of the RDS instance."
+  type        = string
+}
+
+variable "rds_database_name" {
+  description = "Initial database name."
+  type        = string
+}
+
+variable "rds_master_username" {
+  description = "Master username for the database."
+  type        = string
+}
+
+variable "rds_engine_version" {
+  description = "PostgreSQL engine version."
+  type        = string
+}
+
+variable "rds_instance_class" {
+  description = "RDS instance class."
+  type        = string
+}
+
+variable "rds_allocated_storage" {
+  description = "RDS allocated storage in GiB."
+  type        = number
+}
+
+variable "rds_backup_retention_period" {
+  description = "Number of days to retain automated backups."
+  type        = number
+}
+
+variable "rds_deletion_protection" {
+  description = "Whether deletion protection is enabled."
+  type        = bool
+}
+
+variable "rds_skip_final_snapshot" {
+  description = "Whether to skip the final snapshot on deletion."
+  type        = bool
+}
+
+variable "rds_secret_name" {
+  description = "Name of the Secrets Manager secret for database credentials."
+  type        = string
+}
+
 variable "ecs_task_family" {
   description = "Family name of the ECS task definition."
   type        = string
 }
 
 variable "ecs_container_name" {
-  description = "Name of the container in the ECS task definition."
+  description = "Name of the ECS container."
   type        = string
 }
 
 variable "ecs_container_port" {
   description = "Port exposed by the application container."
   type        = number
-
-  validation {
-    condition     = var.ecs_container_port > 0 && var.ecs_container_port < 65536
-    error_message = "ecs_container_port must be between 1 and 65535."
-  }
 }
 
 variable "ecs_task_cpu" {
@@ -119,6 +184,21 @@ variable "ecs_task_memory" {
 }
 
 variable "ecs_image_tag" {
-  description = "ECR image tag used by the ECS task definition."
+  description = "ECR image tag used by the ECS task."
+  type        = string
+}
+
+variable "ecs_service_name" {
+  description = "Name of the ECS service."
+  type        = string
+}
+
+variable "ecs_desired_count" {
+  description = "Number of ECS tasks desired by the service."
+  type        = number
+}
+
+variable "ecs_allowed_ingress_cidr" {
+  description = "CIDR allowed to access the application port."
   type        = string
 }
