@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+import psycopg2
+
 from app import app
 
 
@@ -15,7 +17,10 @@ def test_create_item_requires_name():
 def test_health_returns_unhealthy_when_database_is_unavailable():
     client = app.test_client()
 
-    with patch("app.get_db_connection", side_effect=Exception("database unavailable")):
+    with patch(
+        "app.get_db_connection",
+        side_effect=psycopg2.Error("database unavailable"),
+    ):
         response = client.get("/health")
 
     assert response.status_code == 503
