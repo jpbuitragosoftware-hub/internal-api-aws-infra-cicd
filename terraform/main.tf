@@ -21,3 +21,12 @@ module "vpc" {
   public_route_cidr_block  = var.public_route_cidr_block
   availability_zone        = var.availability_zone
 }
+
+module "ecr" {
+  source = "./modules/ecr"
+
+  repository_name       = var.ecr_repository_name
+  image_tag_mutability  = var.ecr_image_tag_mutability
+  scan_on_push          = var.ecr_scan_on_push
+  image_retention_count = var.ecr_image_retention_count
+}

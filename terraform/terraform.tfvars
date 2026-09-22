@@ -3,3 +3,7 @@ vpc_cidr_block           = "10.0.0.0/16"
 public_subnet_cidr_block = "10.0.1.0/24"
 public_route_cidr_block  = "0.0.0.0/0"
 availability_zone        = "eu-central-1a"
+ecr_repository_name       = "internal-api-aws-infra-cicd"
+ecr_image_tag_mutability  = "IMMUTABLE"
+ecr_scan_on_push          = false
+ecr_image_retention_count = 3

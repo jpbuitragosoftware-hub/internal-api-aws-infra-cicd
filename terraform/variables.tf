@@ -22,3 +22,33 @@ variable "availability_zone" {
   description = "Availability Zone for the public subnet."
   type        = string
 }
+
+variable "ecr_repository_name" {
+  description = "Name of the ECR repository."
+  type        = string
+}
+
+variable "ecr_image_tag_mutability" {
+  description = "Whether ECR image tags can be overwritten."
+  type        = string
+
+  validation {
+    condition     = contains(["MUTABLE", "IMMUTABLE"], var.ecr_image_tag_mutability)
+    error_message = "ecr_image_tag_mutability must be MUTABLE or IMMUTABLE."
+  }
+}
+
+variable "ecr_scan_on_push" {
+  description = "Whether ECR scans images when they are pushed."
+  type        = bool
+}
+
+variable "ecr_image_retention_count" {
+  description = "Number of images to retain in the ECR repository."
+  type        = number
+
+  validation {
+    condition     = var.ecr_image_retention_count > 0
+    error_message = "ecr_image_retention_count must be greater than zero."
+  }
+}
