@@ -55,6 +55,16 @@ module "ecs" {
   security_group_description = var.ecs_security_group_description
 }
 
+module "alb" {
+  source = "./modules/alb"
+
+  name                 = var.alb_name
+  vpc_id               = module.vpc.vpc_id
+  subnet_ids           = module.vpc.private_subnet_ids
+  container_port       = var.ecs_container_port
+  allowed_ingress_cidr = var.vpc_cidr_block
+}
+
 module "rds" {
   source = "./modules/rds"
 
@@ -76,33 +86,34 @@ module "rds" {
 module "ecs_app" {
   source = "./modules/ecs_app"
 
-  cluster_name            = module.ecs.cluster_name
-  task_execution_role_arn = module.ecs.execution_role_arn
-  security_group_id       = module.ecs.security_group_id
-  subnet_id               = module.vpc.public_subnet_id
-  image_repository_url    = module.ecr.repository_url
-  image_tag               = var.ecs_image_tag
-  task_family             = var.ecs_task_family
-  container_name          = var.ecs_container_name
-  container_port          = var.ecs_container_port
-  task_cpu                = var.ecs_task_cpu
-  task_memory             = var.ecs_task_memory
-  log_group_name          = module.ecs.log_group_name
-  database_host           = module.rds.endpoint
-  database_secret_arn     = module.rds.secret_arn
-  service_name            = var.ecs_service_name
-  desired_count           = var.ecs_desired_count
-  allowed_ingress_cidr    = var.ecs_allowed_ingress_cidr
+  cluster_name                     = module.ecs.cluster_name
+  task_execution_role_arn          = module.ecs.execution_role_arn
+  security_group_id                = module.ecs.security_group_id
+  private_subnet_ids               = module.vpc.private_subnet_ids
+  image_repository_url             = module.ecr.repository_url
+  image_tag                        = var.ecs_image_tag
+  task_family                      = var.ecs_task_family
+  container_name                   = var.ecs_container_name
+  container_port                   = var.ecs_container_port
+  task_cpu                         = var.ecs_task_cpu
+  task_memory                      = var.ecs_task_memory
+  log_group_name                   = module.ecs.log_group_name
+  database_host                    = module.rds.endpoint
+  database_secret_arn              = module.rds.secret_arn
+  service_name                    = var.ecs_service_name
+  desired_count                   = var.ecs_desired_count
+  load_balancer_security_group_id = module.alb.security_group_id
+  target_group_arn                 = module.alb.target_group_arn
 }
 
 module "github_oidc" {
   source = "./modules/github_oidc"
 
-  repository_subject    = var.github_repository_subject
-  branch                = var.github_deployment_branch
-  role_name             = var.github_actions_role_name
-  ecr_repository_arn    = module.ecr.repository_arn
-  ecs_cluster_arn       = module.ecs.cluster_arn
-  ecs_service_arn       = module.ecs_app.service_arn
+  repository_subject      = var.github_repository_subject
+  branch                  = var.github_deployment_branch
+  role_name               = var.github_actions_role_name
+  ecr_repository_arn      = module.ecr.repository_arn
+  ecs_cluster_arn         = module.ecs.cluster_arn
+  ecs_service_arn         = module.ecs_app.service_arn
   task_execution_role_arn = module.ecs.execution_role_arn
 }

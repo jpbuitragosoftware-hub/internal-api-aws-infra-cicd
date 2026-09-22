@@ -13,9 +13,9 @@ variable "security_group_id" {
   type        = string
 }
 
-variable "subnet_id" {
-  description = "Public subnet ID for the temporary ECS service."
-  type        = string
+variable "private_subnet_ids" {
+  description = "Private subnet IDs for ECS tasks."
+  type        = list(string)
 }
 
 variable "image_repository_url" {
@@ -68,6 +68,11 @@ variable "database_secret_arn" {
   type        = string
 }
 
+variable "target_group_arn" {
+  description = "Target group ARN for the ECS service."
+  type        = string
+}
+
 variable "service_name" {
   description = "ECS service name."
   type        = string
@@ -78,7 +83,7 @@ variable "desired_count" {
   type        = number
 }
 
-variable "allowed_ingress_cidr" {
-  description = "CIDR allowed to access the application port."
+variable "load_balancer_security_group_id" {
+  description = "Security group ID of the internal load balancer."
   type        = string
 }

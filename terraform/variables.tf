@@ -198,8 +198,8 @@ variable "ecs_desired_count" {
   type        = number
 }
 
-variable "ecs_allowed_ingress_cidr" {
-  description = "CIDR allowed to access the application port."
+variable "alb_name" {
+  description = "Name of the internal application load balancer."
   type        = string
 }
 

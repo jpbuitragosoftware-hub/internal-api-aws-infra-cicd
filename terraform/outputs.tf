@@ -8,6 +8,11 @@ output "public_subnet_id" {
   value       = module.vpc.public_subnet_id
 }
 
+output "alb_dns_name" {
+  description = "Internal application load balancer DNS name."
+  value       = module.alb.dns_name
+}
+
 output "ecr_repository_name" {
   description = "Name of the ECR repository."
   value       = module.ecr.repository_name

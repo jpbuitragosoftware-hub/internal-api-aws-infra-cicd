@@ -16,13 +16,13 @@ resource "aws_iam_role_policy" "database_secret_access" {
   })
 }
 
-resource "aws_vpc_security_group_ingress_rule" "application" {
+resource "aws_vpc_security_group_ingress_rule" "load_balancer" {
   security_group_id = var.security_group_id
-  cidr_ipv4         = var.allowed_ingress_cidr
+  referenced_security_group_id = var.load_balancer_security_group_id
   from_port         = var.container_port
   to_port           = var.container_port
   ip_protocol       = "tcp"
-  description       = "Temporary access for portfolio testing."
+  description       = "Application traffic from the internal load balancer."
 }
 
 resource "aws_ecs_task_definition" "this" {
@@ -79,13 +79,32 @@ resource "aws_ecs_service" "this" {
   launch_type      = "FARGATE"
   platform_version = "1.4.0"
 
+  load_balancer {
+    target_group_arn = var.target_group_arn
+    container_name   = var.container_name
+    container_port   = var.container_port
+  }
+
+  deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
   lifecycle {
     ignore_changes = [task_definition]
   }
 
   network_configuration {
-    subnets          = [var.subnet_id]
+    subnets          = var.private_subnet_ids
     security_groups  = [var.security_group_id]
-    assign_public_ip = true
+    assign_public_ip = false
+  }
+
+  ordered_placement_strategy {
+    type  = "spread"
+    field = "attribute:ecs.availability-zone"
   }
 }
