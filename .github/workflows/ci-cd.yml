@@ -74,3 +74,83 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: internal_api
+          POSTGRES_USER: internal_api_user
+          POSTGRES_PASSWORD: local_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U internal_api_user -d internal_api"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build --tag internal-api:test ./app
+
+      - name: Initialize database schema
+        run: >
+          docker run --rm --network host
+          -e DB_HOST=127.0.0.1
+          -e DB_PORT=5432
+          -e DB_NAME=internal_api
+          -e DB_USER=internal_api_user
+          -e DB_PASSWORD=local_password
+          internal-api:test
+          python -c "from app import initialize_database; initialize_database()"
+
+      - name: Start API container
+        run: >
+          docker run --detach --name internal-api-test --network host
+          -e DB_HOST=127.0.0.1
+          -e DB_PORT=5432
+          -e DB_NAME=internal_api
+          -e DB_USER=internal_api_user
+          -e DB_PASSWORD=local_password
+          -e PORT=5000
+          internal-api:test
+
+      - name: Wait for API
+        run: |
+          for attempt in {1..30}; do
+            if curl --silent --fail http://127.0.0.1:5000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs internal-api-test
+          exit 1
+
+      - name: Test API endpoints
+        run: |
+          curl --silent --fail http://127.0.0.1:5000/health | grep -q '"status":"healthy"'
+          curl --silent --fail http://127.0.0.1:5000/items | grep -q '^\[\]'
+          response=$(curl --silent --fail \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data '{"name":"CI integration test"}' \
+            http://127.0.0.1:5000/items)
+          echo "$response" | grep -q '"name":"CI integration test"'
+          curl --silent --fail http://127.0.0.1:5000/items | grep -q 'CI integration test'
+
+      - name: Show API logs on failure
+        if: failure()
+        run: docker logs internal-api-test
+
+      - name: Stop API container
+        if: always()
+        run: docker rm --force internal-api-test
