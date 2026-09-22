@@ -1,9 +1,27 @@
 import os
+import time
 
 import psycopg2
-from flask import Flask, jsonify, request
+from flask import Flask, Response, g, jsonify, request
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Histogram,
+    generate_latest,
+)
 
 app = Flask(__name__)
+
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Total number of HTTP requests.",
+    ["method", "endpoint", "status"],
+)
+REQUEST_LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds.",
+    ["method", "endpoint"],
+)
 
 
 def get_db_connection():
@@ -15,6 +33,22 @@ def get_db_connection():
         "password": os.getenv("DB_" + "PASSWORD"),
     }
     return psycopg2.connect(**connection_options)
+
+
+@app.before_request
+def start_request_timer():
+    g.request_started_at = time.perf_counter()
+
+
+@app.after_request
+def record_request_metrics(response):
+    endpoint = request.url_rule.rule if request.url_rule else "unknown"
+    duration = time.perf_counter() - g.request_started_at
+
+    REQUEST_COUNT.labels(request.method, endpoint, response.status_code).inc()
+    REQUEST_LATENCY.labels(request.method, endpoint).observe(duration)
+
+    return response
 
 
 def initialize_database():
@@ -52,6 +86,16 @@ def health():
 
     except psycopg2.Error:
         return jsonify({"status": "unhealthy"}), 503
+
+
+@app.route("/ready", methods=["GET"])
+def ready():
+    return health()
+
+
+@app.route("/metrics", methods=["GET"])
+def metrics():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 @app.route("/items", methods=["GET"])
