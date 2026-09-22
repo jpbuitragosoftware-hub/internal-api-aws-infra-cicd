@@ -1,5 +1,5 @@
-variable "repository" {
-  description = "GitHub repository in owner/name format."
+variable "repository_subject" {
+  description = "Exact GitHub OIDC subject allowed to assume the role."
   type        = string
 }
 
