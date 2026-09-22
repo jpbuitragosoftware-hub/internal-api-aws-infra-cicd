@@ -27,19 +27,6 @@ jobs:
       - name: Check out merged commit
         uses: actions/checkout@v4
 
-      - name: Diagnose OIDC claims
-        run: |
-          token_response=$(curl --silent --fail \
-            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com")
-          token=$(echo "$token_response" | jq --raw-output '.value')
-          payload=$(echo "$token" | cut --delimiter='.' --fields=2 | tr '_-' '/+')
-          case $((${#payload} % 4)) in
-            2) payload="${payload}==" ;;
-            3) payload="${payload}=" ;;
-          esac
-          echo "$payload" | base64 --decode 2>/dev/null | jq '{iss, aud, sub, ref, event_name}'
-
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:

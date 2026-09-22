@@ -203,13 +203,13 @@ variable "ecs_allowed_ingress_cidr" {
   type        = string
 }
 
-variable "github_repository" {
-  description = "GitHub repository in owner/name format."
+variable "github_deployment_branch" {
+  description = "Branch allowed to deploy through GitHub Actions."
   type        = string
 }
 
-variable "github_deployment_branch" {
-  description = "Branch allowed to deploy through GitHub Actions."
+variable "github_repository_subject" {
+  description = "Exact GitHub OIDC subject allowed to deploy."
   type        = string
 }
 

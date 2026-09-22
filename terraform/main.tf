@@ -98,7 +98,7 @@ module "ecs_app" {
 module "github_oidc" {
   source = "./modules/github_oidc"
 
-  repository            = var.github_repository
+  repository_subject    = var.github_repository_subject
   branch                = var.github_deployment_branch
   role_name             = var.github_actions_role_name
   ecr_repository_arn    = module.ecr.repository_arn
