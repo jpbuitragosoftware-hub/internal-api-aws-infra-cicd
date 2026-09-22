@@ -50,7 +50,7 @@ def health():
 
         return jsonify({"status": "healthy"}), 200
 
-    except Exception:
+    except psycopg2.Error:
         return jsonify({"status": "unhealthy"}), 503
 
 
