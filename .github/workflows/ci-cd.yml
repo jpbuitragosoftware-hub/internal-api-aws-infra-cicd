@@ -71,7 +71,7 @@ jobs:
         run: docker build --tag internal-api:${{ github.sha }} ./app
 
       - name: Scan Docker image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: internal-api:${{ github.sha }}
           format: table
