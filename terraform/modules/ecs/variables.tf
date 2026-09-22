@@ -29,6 +29,41 @@ variable "security_group_name" {
 }
 
 variable "security_group_description" {
-  description = "Description of the security group."
+  description = "Description of the ECS security group."
+  type        = string
+}
+
+variable "task_family" {
+  description = "Family name of the ECS task definition."
+  type        = string
+}
+
+variable "container_name" {
+  description = "Name of the container."
+  type        = string
+}
+
+variable "container_port" {
+  description = "Port exposed by the application container."
+  type        = number
+}
+
+variable "task_cpu" {
+  description = "CPU units allocated to the Fargate task."
+  type        = number
+}
+
+variable "task_memory" {
+  description = "Memory in MiB allocated to the Fargate task."
+  type        = number
+}
+
+variable "image_tag" {
+  description = "ECR image tag used by the task definition."
+  type        = string
+}
+
+variable "image_repository_url" {
+  description = "URL of the ECR repository."
   type        = string
 }

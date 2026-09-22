@@ -22,3 +22,8 @@ output "security_group_id" {
   description = "ID of the ECS security group."
   value       = aws_security_group.this.id
 }
+
+output "task_definition_arn" {
+  description = "ARN of the ECS task definition."
+  value       = aws_ecs_task_definition.this.arn
+}

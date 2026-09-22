@@ -41,4 +41,11 @@ module "ecs" {
   log_retention_in_days      = var.ecs_log_retention_in_days
   security_group_name        = var.ecs_security_group_name
   security_group_description = var.ecs_security_group_description
+  task_family                = var.ecs_task_family
+  container_name             = var.ecs_container_name
+  container_port             = var.ecs_container_port
+  task_cpu                   = var.ecs_task_cpu
+  task_memory                = var.ecs_task_memory
+  image_tag                  = var.ecs_image_tag
+  image_repository_url       = module.ecr.repository_url
 }

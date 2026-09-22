@@ -87,3 +87,38 @@ variable "ecs_security_group_description" {
   description = "Description of the ECS security group."
   type        = string
 }
+
+variable "ecs_task_family" {
+  description = "Family name of the ECS task definition."
+  type        = string
+}
+
+variable "ecs_container_name" {
+  description = "Name of the container in the ECS task definition."
+  type        = string
+}
+
+variable "ecs_container_port" {
+  description = "Port exposed by the application container."
+  type        = number
+
+  validation {
+    condition     = var.ecs_container_port > 0 && var.ecs_container_port < 65536
+    error_message = "ecs_container_port must be between 1 and 65535."
+  }
+}
+
+variable "ecs_task_cpu" {
+  description = "CPU units allocated to the Fargate task."
+  type        = number
+}
+
+variable "ecs_task_memory" {
+  description = "Memory in MiB allocated to the Fargate task."
+  type        = number
+}
+
+variable "ecs_image_tag" {
+  description = "ECR image tag used by the ECS task definition."
+  type        = string
+}

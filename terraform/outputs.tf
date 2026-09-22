@@ -37,3 +37,8 @@ output "ecs_security_group_id" {
   description = "ID of the ECS security group."
   value       = module.ecs.security_group_id
 }
+
+output "ecs_task_definition_arn" {
+  description = "ARN of the ECS task definition."
+  value       = module.ecs.task_definition_arn
+}
