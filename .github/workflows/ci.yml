@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI
 
 on:
   pull_request:
@@ -158,66 +158,3 @@ jobs:
       - name: Stop API container
         if: always()
         run: docker rm --force internal-api-test
-
-  deployment:
-    name: Deployment
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    env:
-      AWS_REGION: eu-central-1
-      ECR_REPOSITORY: internal-api-aws-infra-cicd
-      ECS_CLUSTER: internal-api-cluster
-      ECS_SERVICE: internal-api-service
-      ECS_TASK_DEFINITION: internal-api
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials with OIDC
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Log in to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push image
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build --tag "$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" ./app
-          docker push "$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
-      - name: Register new ECS task definition
-        id: task-definition
-        env:
-          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition "$ECS_TASK_DEFINITION" \
-            --query taskDefinition \
-            --output json > task-definition.json
-          jq --arg image "$IMAGE_URI" \
-            '.containerDefinitions[0].image = $image
-             | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' \
-            task-definition.json > task-definition-rendered.json
-          echo "task_definition=$(aws ecs register-task-definition \
-            --cli-input-json file://task-definition-rendered.json \
-            --query taskDefinition.taskDefinitionArn \
-            --output text)" >> "$GITHUB_OUTPUT"
-
-      - name: Update ECS service
-        run: |
-          aws ecs update-service \
-            --cluster "$ECS_CLUSTER" \
-            --service "$ECS_SERVICE" \
-            --task-definition "${{ steps.task-definition.outputs.task_definition }}"
