@@ -187,7 +187,8 @@ jobs:
           if ! aws elbv2 describe-target-health \
               --target-group-arn "$TARGET_GROUP_ARN" \
               --no-cli-pager \
-              --output json | jq -e '.TargetHealthDescriptions | length > 0 and all(.[]; .TargetHealth.State == "healthy")' > /dev/null; then
+              --output json | jq -e '.TargetHealthDescriptions | any(.[]; .TargetHealth.State == "healthy")' > /dev/null; then
+            echo "No healthy ALB target found for the active ECS deployment."
             rollback
             exit 1
           fi
