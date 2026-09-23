@@ -103,8 +103,4 @@ resource "aws_ecs_service" "this" {
     assign_public_ip = false
   }
 
-  ordered_placement_strategy {
-    type  = "spread"
-    field = "attribute:ecs.availability-zone"
-  }
 }

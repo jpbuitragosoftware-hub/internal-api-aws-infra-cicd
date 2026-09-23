@@ -133,5 +133,6 @@ module "monitoring" {
 module "grafana" {
   source = "./modules/grafana"
 
-  name = var.grafana_workspace_name
+  name                = var.grafana_workspace_name
+  workspace_role_name = var.grafana_workspace_role_name
 }

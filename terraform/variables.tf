@@ -213,6 +213,11 @@ variable "grafana_workspace_name" {
   type        = string
 }
 
+variable "grafana_workspace_role_name" {
+  description = "IAM role name used by Amazon Managed Grafana."
+  type        = string
+}
+
 variable "github_deployment_branch" {
   description = "Branch allowed to deploy through GitHub Actions."
   type        = string
