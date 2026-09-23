@@ -83,7 +83,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16.15
         env:
           POSTGRES_DB: internal_api
           POSTGRES_USER: internal_api_user

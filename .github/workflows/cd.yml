@@ -303,3 +303,8 @@ jobs:
             rollback
             exit 1
           fi
+
+          echo "ECS deployment completed successfully."
+          echo "ALB target health validation passed."
+          echo "Smoke test passed."
+          echo "Deployment completed successfully."
