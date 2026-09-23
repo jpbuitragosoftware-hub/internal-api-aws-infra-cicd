@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: cd-${{ github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   deployment:
     name: Deployment
@@ -22,6 +26,7 @@ jobs:
       ECS_CLUSTER: internal-api-cluster
       ECS_SERVICE: internal-api-service
       ECS_TASK_DEFINITION: internal-api
+      ALB_NAME: api-internal-alb
 
     steps:
       - name: Check out merged commit
@@ -50,22 +55,139 @@ jobs:
         env:
           IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
         run: |
+          set -euo pipefail
+
+          PREVIOUS_TASK_DEFINITION="$(aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE" \
+            --query 'services[0].taskDefinition' \
+            --output text)"
+          echo "previous_task_definition=$PREVIOUS_TASK_DEFINITION" >> "$GITHUB_OUTPUT"
+
           aws ecs describe-task-definition \
             --task-definition "$ECS_TASK_DEFINITION" \
             --query taskDefinition \
             --output json > task-definition.json
+
           jq --arg image "$IMAGE_URI" \
             '.containerDefinitions[0].image = $image
              | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' \
             task-definition.json > task-definition-rendered.json
+
           echo "task_definition=$(aws ecs register-task-definition \
             --cli-input-json file://task-definition-rendered.json \
             --query taskDefinition.taskDefinitionArn \
             --output text)" >> "$GITHUB_OUTPUT"
 
-      - name: Update ECS service
+      - name: Update ECS service and verify deployment
+        env:
+          PREVIOUS_TASK_DEFINITION: ${{ steps.task-definition.outputs.previous_task_definition }}
+          TASK_DEFINITION: ${{ steps.task-definition.outputs.task_definition }}
         run: |
+          set -euo pipefail
+
+          rollback() {
+            echo "Deployment verification failed; rolling back to previous task definition: $PREVIOUS_TASK_DEFINITION"
+            aws ecs update-service \
+              --cluster "$ECS_CLUSTER" \
+              --service "$ECS_SERVICE" \
+              --task-definition "$PREVIOUS_TASK_DEFINITION"
+
+            aws ecs wait services-stable \
+              --cluster "$ECS_CLUSTER" \
+              --services "$ECS_SERVICE"
+          }
+
           aws ecs update-service \
             --cluster "$ECS_CLUSTER" \
             --service "$ECS_SERVICE" \
-            --task-definition "${{ steps.task-definition.outputs.task_definition }}"
+            --task-definition "$TASK_DEFINITION"
+
+          if ! aws ecs wait services-stable \
+              --cluster "$ECS_CLUSTER" \
+              --services "$ECS_SERVICE"; then
+            rollback
+            exit 1
+          fi
+
+          TARGET_GROUP_ARN="$(aws elbv2 describe-target-groups \
+            --names "$ALB_NAME-tg" \
+            --query 'TargetGroups[0].TargetGroupArn' \
+            --output text)"
+
+          if ! aws elbv2 describe-target-health \
+              --target-group-arn "$TARGET_GROUP_ARN" \
+              --output json | jq -e '.TargetHealthDescriptions | length > 0 and all(.[]; .TargetHealth.State == "healthy")' > /dev/null; then
+            rollback
+            exit 1
+          fi
+
+          ALB_DNS_NAME="$(aws elbv2 describe-load-balancers \
+            --names "$ALB_NAME" \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text)"
+
+          SERVICE_NETWORK_CONFIGURATION="$(aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE" \
+            --query 'services[0].networkConfiguration.awsvpcConfiguration' \
+            --output json)"
+
+          jq -n \
+            --arg cluster "$ECS_CLUSTER" \
+            --arg task_definition "$TASK_DEFINITION" \
+            --arg container_name "internal-api" \
+            --arg alb_dns_name "$ALB_DNS_NAME" \
+            --argjson network_configuration "$SERVICE_NETWORK_CONFIGURATION" \
+            '{
+              cluster: $cluster,
+              taskDefinition: $task_definition,
+              launchType: "FARGATE",
+              networkConfiguration: {
+                awsvpcConfiguration: $network_configuration
+              },
+              overrides: {
+                containerOverrides: [{
+                  name: $container_name,
+                  command: [
+                    "python",
+                    "-c",
+                    ("import json, urllib.request; " +
+                     "[((lambda response: (_ for _ in ()).throw(Exception(\"unexpected response\")) if json.load(response).get(\"status\") != \"healthy\" else None)(urllib.request.urlopen(\"http://\($alb_dns_name)\" + endpoint, timeout=10)) for endpoint in [\"/health\", \"/ready\"]]")
+                  ]
+                }]
+              }
+            }' > smoke-task.json
+
+          SMOKE_TASK_ARN="$(aws ecs run-task \
+            --cli-input-json file://smoke-task.json \
+            --query 'tasks[0].taskArn' \
+            --output text)"
+
+          if [ -z "$SMOKE_TASK_ARN" ] || [ "$SMOKE_TASK_ARN" = "None" ]; then
+            rollback
+            exit 1
+          fi
+
+          if ! aws ecs wait tasks-stopped \
+              --cluster "$ECS_CLUSTER" \
+              --tasks "$SMOKE_TASK_ARN"; then
+            aws ecs stop-task \
+              --cluster "$ECS_CLUSTER" \
+              --task "$SMOKE_TASK_ARN" \
+              --reason "Smoke test timed out" || true
+            rollback
+            exit 1
+          fi
+
+          SMOKE_EXIT_CODE="$(aws ecs describe-tasks \
+            --cluster "$ECS_CLUSTER" \
+            --tasks "$SMOKE_TASK_ARN" \
+            --query 'tasks[0].containers[0].exitCode' \
+            --output text)"
+
+          if [ "$SMOKE_EXIT_CODE" != "0" ]; then
+            echo "Smoke test failed with exit code: $SMOKE_EXIT_CODE"
+            rollback
+            exit 1
+          fi

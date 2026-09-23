@@ -62,7 +62,10 @@ data "aws_iam_policy_document" "deployment" {
     effect = "Allow"
     actions = [
       "ecs:DescribeTaskDefinition",
-      "ecs:RegisterTaskDefinition"
+      "ecs:RegisterTaskDefinition",
+      "ecs:RunTask",
+      "ecs:DescribeTasks",
+      "ecs:StopTask"
     ]
     resources = ["*"]
   }
@@ -77,9 +80,19 @@ data "aws_iam_policy_document" "deployment" {
   }
 
   statement {
-    effect    = "Allow"
-    actions   = ["iam:PassRole"]
+    effect = "Allow"
+    actions = ["iam:PassRole"]
     resources = [var.task_execution_role_arn]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:DescribeTargetHealth",
+      "elasticloadbalancing:DescribeLoadBalancers"
+    ]
+    resources = ["*"]
   }
 }
 

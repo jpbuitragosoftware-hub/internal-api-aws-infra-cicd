@@ -8,6 +8,11 @@ output "public_subnet_id" {
   value       = module.vpc.public_subnet_id
 }
 
+output "alb_dns_name" {
+  description = "Internal application load balancer DNS name."
+  value       = module.alb.dns_name
+}
+
 output "ecr_repository_name" {
   description = "Name of the ECR repository."
   value       = module.ecr.repository_name
@@ -51,4 +56,24 @@ output "rds_secret_arn" {
 output "github_actions_role_arn" {
   description = "IAM role ARN for GitHub Actions OIDC."
   value       = module.github_oidc.role_arn
+}
+
+output "monitoring_sns_topic_arn" {
+  description = "SNS topic ARN for CloudWatch alarm notifications."
+  value       = module.monitoring.sns_topic_arn
+}
+
+output "cloudwatch_dashboard_name" {
+  description = "CloudWatch dashboard name."
+  value       = module.monitoring.dashboard_name
+}
+
+output "grafana_workspace_id" {
+  description = "Amazon Managed Grafana workspace ID."
+  value       = module.grafana.workspace_id
+}
+
+output "grafana_endpoint" {
+  description = "Amazon Managed Grafana workspace endpoint."
+  value       = module.grafana.endpoint
 }

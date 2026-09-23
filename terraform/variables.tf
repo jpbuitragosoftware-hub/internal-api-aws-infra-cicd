@@ -198,8 +198,23 @@ variable "ecs_desired_count" {
   type        = number
 }
 
-variable "ecs_allowed_ingress_cidr" {
-  description = "CIDR allowed to access the application port."
+variable "alb_name" {
+  description = "Name of the internal application load balancer."
+  type        = string
+}
+
+variable "monitoring_notification_email" {
+  description = "Email address for CloudWatch alarm notifications."
+  type        = string
+}
+
+variable "grafana_workspace_name" {
+  description = "Name of the Amazon Managed Grafana workspace."
+  type        = string
+}
+
+variable "grafana_workspace_role_name" {
+  description = "IAM role name used by Amazon Managed Grafana."
   type        = string
 }
 
