@@ -223,8 +223,10 @@ jobs:
                   command: [
                     "python",
                     "-c",
-                    ("import json, urllib.request; " +
-                     "[((lambda response: (_ for _ in ()).throw(Exception(\"unexpected response\")) if json.load(response).get(\"status\") != \"healthy\" else None)(urllib.request.urlopen(\"http://\($alb_dns_name)\" + endpoint, timeout=10)) for endpoint in [\"/health\", \"/ready\"]]")
+                    ("import json, sys, urllib.request; " +
+                     "responses = [json.load(urllib.request.urlopen(\"http://\($alb_dns_name)\" + endpoint, timeout=5)) for endpoint in [\"/health\", \"/ready\"]]; " +
+                     "print(json.dumps(responses)); " +
+                     "sys.exit(0 if all(response.get(\"status\") == \"healthy\" for response in responses) else 1)")
                   ]
                 }]
               }
@@ -276,7 +278,14 @@ jobs:
             --no-cli-pager)"
 
           if [ "$SMOKE_EXIT_CODE" != "0" ]; then
-            echo "Smoke test failed with exit code: $SMOKE_EXIT_CODE"
+            echo "Smoke test failed:"
+            aws ecs describe-tasks \
+              --cluster "$ECS_CLUSTER" \
+              --tasks "$SMOKE_TASK_ARN" \
+              --query 'tasks[0].{lastStatus:lastStatus,stopCode:stopCode,stoppedReason:stoppedReason,containerReason:containers[0].reason,exitCode:containers[0].exitCode}' \
+              --output table \
+              --no-cli-pager || true
+            echo "Smoke test exit code: $SMOKE_EXIT_CODE"
             rollback
             exit 1
           fi
