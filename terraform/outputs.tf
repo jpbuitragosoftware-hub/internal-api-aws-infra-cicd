@@ -67,3 +67,13 @@ output "cloudwatch_dashboard_name" {
   description = "CloudWatch dashboard name."
   value       = module.monitoring.dashboard_name
 }
+
+output "grafana_workspace_id" {
+  description = "Amazon Managed Grafana workspace ID."
+  value       = module.grafana.workspace_id
+}
+
+output "grafana_endpoint" {
+  description = "Amazon Managed Grafana workspace endpoint."
+  value       = module.grafana.endpoint
+}

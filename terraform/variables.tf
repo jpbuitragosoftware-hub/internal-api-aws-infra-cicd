@@ -208,6 +208,11 @@ variable "monitoring_notification_email" {
   type        = string
 }
 
+variable "grafana_workspace_name" {
+  description = "Name of the Amazon Managed Grafana workspace."
+  type        = string
+}
+
 variable "github_deployment_branch" {
   description = "Branch allowed to deploy through GitHub Actions."
   type        = string

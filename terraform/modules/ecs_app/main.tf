@@ -17,12 +17,12 @@ resource "aws_iam_role_policy" "database_secret_access" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "load_balancer" {
-  security_group_id = var.security_group_id
+  security_group_id            = var.security_group_id
   referenced_security_group_id = var.load_balancer_security_group_id
-  from_port         = var.container_port
-  to_port           = var.container_port
-  ip_protocol       = "tcp"
-  description       = "Application traffic from the internal load balancer."
+  from_port                    = var.container_port
+  to_port                      = var.container_port
+  ip_protocol                  = "tcp"
+  description                  = "Application traffic from the internal load balancer."
 }
 
 resource "aws_ecs_task_definition" "this" {

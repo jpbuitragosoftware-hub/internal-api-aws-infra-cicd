@@ -86,24 +86,24 @@ module "rds" {
 module "ecs_app" {
   source = "./modules/ecs_app"
 
-  cluster_name                     = module.ecs.cluster_name
-  task_execution_role_arn          = module.ecs.execution_role_arn
-  security_group_id                = module.ecs.security_group_id
-  private_subnet_ids               = module.vpc.private_subnet_ids
-  image_repository_url             = module.ecr.repository_url
-  image_tag                        = var.ecs_image_tag
-  task_family                      = var.ecs_task_family
-  container_name                   = var.ecs_container_name
-  container_port                   = var.ecs_container_port
-  task_cpu                         = var.ecs_task_cpu
-  task_memory                      = var.ecs_task_memory
-  log_group_name                   = module.ecs.log_group_name
-  database_host                    = module.rds.endpoint
-  database_secret_arn              = module.rds.secret_arn
+  cluster_name                    = module.ecs.cluster_name
+  task_execution_role_arn         = module.ecs.execution_role_arn
+  security_group_id               = module.ecs.security_group_id
+  private_subnet_ids              = module.vpc.private_subnet_ids
+  image_repository_url            = module.ecr.repository_url
+  image_tag                       = var.ecs_image_tag
+  task_family                     = var.ecs_task_family
+  container_name                  = var.ecs_container_name
+  container_port                  = var.ecs_container_port
+  task_cpu                        = var.ecs_task_cpu
+  task_memory                     = var.ecs_task_memory
+  log_group_name                  = module.ecs.log_group_name
+  database_host                   = module.rds.endpoint
+  database_secret_arn             = module.rds.secret_arn
   service_name                    = var.ecs_service_name
   desired_count                   = var.ecs_desired_count
   load_balancer_security_group_id = module.alb.security_group_id
-  target_group_arn                 = module.alb.target_group_arn
+  target_group_arn                = module.alb.target_group_arn
 }
 
 module "github_oidc" {
@@ -121,11 +121,17 @@ module "github_oidc" {
 module "monitoring" {
   source = "./modules/monitoring"
 
-  name                  = "internal-api"
-  ecs_cluster_name      = module.ecs.cluster_name
-  ecs_service_name      = module.ecs_app.service_name
-  alb_arn_suffix        = module.alb.arn_suffix
+  name                    = "internal-api"
+  ecs_cluster_name        = module.ecs.cluster_name
+  ecs_service_name        = module.ecs_app.service_name
+  alb_arn_suffix          = module.alb.arn_suffix
   target_group_arn_suffix = module.alb.target_group_arn_suffix
-  rds_identifier        = var.rds_identifier
-  notification_email    = var.monitoring_notification_email
+  rds_identifier          = var.rds_identifier
+  notification_email      = var.monitoring_notification_email
+}
+
+module "grafana" {
+  source = "./modules/grafana"
+
+  name = var.grafana_workspace_name
 }
