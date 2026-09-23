@@ -39,7 +39,6 @@ module "ecr" {
 
   repository_name       = var.ecr_repository_name
   image_tag_mutability  = var.ecr_image_tag_mutability
-  scan_on_push          = var.ecr_scan_on_push
   image_retention_count = var.ecr_image_retention_count
 }
 
@@ -110,10 +109,8 @@ module "github_oidc" {
   source = "./modules/github_oidc"
 
   repository_subject      = var.github_repository_subject
-  branch                  = var.github_deployment_branch
   role_name               = var.github_actions_role_name
   ecr_repository_arn      = module.ecr.repository_arn
-  ecs_cluster_arn         = module.ecs.cluster_arn
   ecs_service_arn         = module.ecs_app.service_arn
   task_execution_role_arn = module.ecs.execution_role_arn
 }

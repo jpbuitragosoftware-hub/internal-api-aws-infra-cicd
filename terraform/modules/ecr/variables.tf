@@ -13,11 +13,6 @@ variable "image_tag_mutability" {
   }
 }
 
-variable "scan_on_push" {
-  description = "Whether ECR scans images when they are pushed."
-  type        = bool
-}
-
 variable "image_retention_count" {
   description = "Number of images to retain in the ECR repository."
   type        = number

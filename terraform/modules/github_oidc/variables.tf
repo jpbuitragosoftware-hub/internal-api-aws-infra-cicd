@@ -3,11 +3,6 @@ variable "repository_subject" {
   type        = string
 }
 
-variable "branch" {
-  description = "GitHub branch allowed to assume the role."
-  type        = string
-}
-
 variable "role_name" {
   description = "IAM role name for GitHub Actions."
   type        = string
@@ -15,11 +10,6 @@ variable "role_name" {
 
 variable "ecr_repository_arn" {
   description = "ECR repository ARN."
-  type        = string
-}
-
-variable "ecs_cluster_arn" {
-  description = "ECS cluster ARN."
   type        = string
 }
 

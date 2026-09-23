@@ -9,7 +9,7 @@ private_availability_zone_a    = "eu-central-1a"
 private_availability_zone_b    = "eu-central-1b"
 ecr_repository_name            = "internal-api-aws-infra-cicd"
 ecr_image_tag_mutability       = "IMMUTABLE"
-ecr_scan_on_push               = false
+
 ecr_image_retention_count      = 3
 ecs_cluster_name               = "internal-api-cluster"
 ecs_execution_role_name        = "internal-api-ecs-task-execution-role"
@@ -36,9 +36,9 @@ ecs_image_tag                  = "v1"
 ecs_service_name               = "internal-api-service"
 ecs_desired_count              = 1
 alb_name                       = "api-internal-alb"
-monitoring_notification_email  = "jpbuitrago.software@gmail.com"
+monitoring_notification_email  = "alerts@example.com"
 grafana_workspace_name         = "internal-api-grafana"
 grafana_workspace_role_name    = "internal-api-grafana-workspace"
-github_deployment_branch       = "main"
-github_repository_subject      = "repo:jpbuitragosoftware-hub@308110730/internal-api-aws-infra-cicd@1380359659:ref:refs/heads/main"
+
+github_repository_subject      = "repo:OWNER/REPOSITORY:ref:refs/heads/main"
 github_actions_role_name       = "internal-api-github-actions"

@@ -58,11 +58,6 @@ variable "ecr_image_tag_mutability" {
   }
 }
 
-variable "ecr_scan_on_push" {
-  description = "Whether ECR scans images when they are pushed."
-  type        = bool
-}
-
 variable "ecr_image_retention_count" {
   description = "Number of images to retain in the ECR repository."
   type        = number
@@ -139,17 +134,17 @@ variable "rds_allocated_storage" {
 }
 
 variable "rds_backup_retention_period" {
-  description = "Number of days to retain automated backups."
+  description = "Lab setting: number of days to retain automated backups."
   type        = number
 }
 
 variable "rds_deletion_protection" {
-  description = "Whether deletion protection is enabled."
+  description = "Lab setting: whether deletion protection is enabled."
   type        = bool
 }
 
 variable "rds_skip_final_snapshot" {
-  description = "Whether to skip the final snapshot on deletion."
+  description = "Lab setting: whether to skip the final snapshot on deletion."
   type        = bool
 }
 
@@ -215,11 +210,6 @@ variable "grafana_workspace_name" {
 
 variable "grafana_workspace_role_name" {
   description = "IAM role name used by Amazon Managed Grafana."
-  type        = string
-}
-
-variable "github_deployment_branch" {
-  description = "Branch allowed to deploy through GitHub Actions."
   type        = string
 }
 
