@@ -31,6 +31,7 @@ def get_db_connection():
         "dbname": os.getenv("DB_NAME"),
         "user": os.getenv("DB_USER"),
         "password": os.getenv("DB_" + "PASSWORD"),
+        "connect_timeout": 3,
     }
     return psycopg2.connect(**connection_options)
 

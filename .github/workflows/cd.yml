@@ -87,7 +87,34 @@ jobs:
         run: |
           set -euo pipefail
 
+          print_deployment_diagnostics() {
+            echo "Deployment diagnostics:"
+
+            TARGET_GROUP_ARN="$(aws ecs describe-services \
+              --cluster "$ECS_CLUSTER" \
+              --services "$ECS_SERVICE" \
+              --query 'services[0].loadBalancers[0].targetGroupArn' \
+              --output text \
+              --no-cli-pager)"
+
+            echo "Target health:"
+            aws elbv2 describe-target-health \
+              --target-group-arn "$TARGET_GROUP_ARN" \
+              --query 'TargetHealthDescriptions[].{state:TargetHealth.State,reason:TargetHealth.Reason,description:TargetHealth.Description,target:Target.Id}' \
+              --output table \
+              --no-cli-pager || true
+
+            echo "Recent ECS events:"
+            aws ecs describe-services \
+              --cluster "$ECS_CLUSTER" \
+              --services "$ECS_SERVICE" \
+              --query 'services[0].events[:5].message' \
+              --output text \
+              --no-cli-pager || true
+          }
+
           rollback() {
+            print_deployment_diagnostics
             echo "Deployment verification failed; rolling back to previous task definition: $PREVIOUS_TASK_DEFINITION"
             aws ecs update-service \
               --cluster "$ECS_CLUSTER" \
