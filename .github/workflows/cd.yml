@@ -95,17 +95,26 @@ jobs:
               --task-definition "$PREVIOUS_TASK_DEFINITION" \
               --no-cli-pager > /dev/null
 
-            wait_for_stable_service
+            wait_for_stable_service 12
           }
 
           wait_for_stable_service() {
-            for attempt in {1..12}; do
+            local max_attempts="$1"
+
+            for attempt in $(seq 1 "$max_attempts"); do
               SERVICE_STATE="$(aws ecs describe-services \
                 --cluster "$ECS_CLUSTER" \
                 --services "$ECS_SERVICE" \
-                --query 'services[0].{desired:desiredCount,running:runningCount,pending:pendingCount,rollout:deployments[0].rolloutState,taskDefinition:taskDefinition}' \
+                --query 'services[0].{desired:desiredCount,running:runningCount,pending:pendingCount,rollout:deployments[0].rolloutState,rolloutReason:deployments[0].rolloutStateReason,taskDefinition:taskDefinition}' \
                 --output json \
                 --no-cli-pager)"
+
+              if echo "$SERVICE_STATE" | jq -e \
+                '.rollout == "FAILED"' > /dev/null; then
+                echo "ECS deployment failed."
+                echo "$SERVICE_STATE" | jq -c .
+                return 1
+              fi
 
               if echo "$SERVICE_STATE" | jq -e \
                 '.pending == 0 and .running == .desired and .rollout == "COMPLETED"' > /dev/null; then
@@ -115,7 +124,7 @@ jobs:
               sleep 10
             done
 
-            echo "ECS service did not become stable within 2 minutes."
+            echo "ECS service did not become stable within $((max_attempts * 10 / 60)) minutes."
             echo "$SERVICE_STATE" | jq -c .
             return 1
           }
@@ -126,7 +135,7 @@ jobs:
             --task-definition "$TASK_DEFINITION" \
             --no-cli-pager > /dev/null
 
-          if ! wait_for_stable_service; then
+          if ! wait_for_stable_service 18; then
             rollback
             exit 1
           fi
