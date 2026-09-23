@@ -92,23 +92,41 @@ jobs:
             aws ecs update-service \
               --cluster "$ECS_CLUSTER" \
               --service "$ECS_SERVICE" \
-              --task-definition "$PREVIOUS_TASK_DEFINITION"
+              --task-definition "$PREVIOUS_TASK_DEFINITION" \
+              --no-cli-pager > /dev/null
 
-            aws ecs wait services-stable \
-              --cluster "$ECS_CLUSTER" \
-              --services "$ECS_SERVICE" \
-              --waiter-config MaxAttempts=12,Delay=10
+            wait_for_stable_service
+          }
+
+          wait_for_stable_service() {
+            for attempt in {1..12}; do
+              SERVICE_STATE="$(aws ecs describe-services \
+                --cluster "$ECS_CLUSTER" \
+                --services "$ECS_SERVICE" \
+                --query 'services[0].{desired:desiredCount,running:runningCount,pending:pendingCount,rollout:deployments[0].rolloutState,taskDefinition:taskDefinition}' \
+                --output json \
+                --no-cli-pager)"
+
+              if echo "$SERVICE_STATE" | jq -e \
+                '.pending == 0 and .running == .desired and .rollout == "COMPLETED"' > /dev/null; then
+                return 0
+              fi
+
+              sleep 10
+            done
+
+            echo "ECS service did not become stable within 2 minutes."
+            echo "$SERVICE_STATE" | jq -c .
+            return 1
           }
 
           aws ecs update-service \
             --cluster "$ECS_CLUSTER" \
             --service "$ECS_SERVICE" \
-            --task-definition "$TASK_DEFINITION"
+            --task-definition "$TASK_DEFINITION" \
+            --no-cli-pager > /dev/null
 
-          if ! aws ecs wait services-stable \
-              --cluster "$ECS_CLUSTER" \
-              --services "$ECS_SERVICE" \
-              --waiter-config MaxAttempts=12,Delay=10; then
+          if ! wait_for_stable_service; then
             rollback
             exit 1
           fi
@@ -132,6 +150,7 @@ jobs:
 
           if ! aws elbv2 describe-target-health \
               --target-group-arn "$TARGET_GROUP_ARN" \
+              --no-cli-pager \
               --output json | jq -e '.TargetHealthDescriptions | length > 0 and all(.[]; .TargetHealth.State == "healthy")' > /dev/null; then
             rollback
             exit 1
@@ -177,21 +196,37 @@ jobs:
           SMOKE_TASK_ARN="$(aws ecs run-task \
             --cli-input-json file://smoke-task.json \
             --query 'tasks[0].taskArn' \
-            --output text)"
+            --output text \
+            --no-cli-pager)"
 
           if [ -z "$SMOKE_TASK_ARN" ] || [ "$SMOKE_TASK_ARN" = "None" ]; then
             rollback
             exit 1
           fi
 
-          if ! aws ecs wait tasks-stopped \
+          SMOKE_STOPPED=false
+          for attempt in {1..12}; do
+            SMOKE_STATUS="$(aws ecs describe-tasks \
               --cluster "$ECS_CLUSTER" \
               --tasks "$SMOKE_TASK_ARN" \
-              --waiter-config MaxAttempts=12,Delay=10; then
+              --query 'tasks[0].lastStatus' \
+              --output text \
+              --no-cli-pager)"
+
+            if [ "$SMOKE_STATUS" = "STOPPED" ]; then
+              SMOKE_STOPPED=true
+              break
+            fi
+
+            sleep 10
+          done
+
+          if [ "$SMOKE_STOPPED" != "true" ]; then
             aws ecs stop-task \
               --cluster "$ECS_CLUSTER" \
               --task "$SMOKE_TASK_ARN" \
-              --reason "Smoke test timed out" || true
+              --reason "Smoke test timed out" \
+              --no-cli-pager > /dev/null || true
             rollback
             exit 1
           fi
@@ -200,7 +235,8 @@ jobs:
             --cluster "$ECS_CLUSTER" \
             --tasks "$SMOKE_TASK_ARN" \
             --query 'tasks[0].containers[0].exitCode' \
-            --output text)"
+            --output text \
+            --no-cli-pager)"
 
           if [ "$SMOKE_EXIT_CODE" != "0" ]; then
             echo "Smoke test failed with exit code: $SMOKE_EXIT_CODE"
