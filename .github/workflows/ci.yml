@@ -9,17 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  pull-request:
-    name: Pull request
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
   checks:
     name: Checks
-    needs: pull-request
     runs-on: ubuntu-latest
 
     steps:
@@ -48,8 +39,7 @@ jobs:
         run: ruff check app
 
       - name: Run unit tests
-        working-directory: app
-        run: python -m pytest tests
+        run: python -m pytest app/tests
 
       - name: Run software composition analysis
         working-directory: app
@@ -76,6 +66,16 @@ jobs:
           ignore-unfixed: true
           severity: CRITICAL,HIGH
 
+      - name: Save Docker image
+        run: docker save internal-api:${{ github.sha }} | gzip > internal-api.tar.gz
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: internal-api-image-${{ github.sha }}
+          path: internal-api.tar.gz
+          retention-days: 1
+
   test:
     name: Test
     needs: build
@@ -100,8 +100,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build --tag internal-api:test ./app
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: internal-api-image-${{ github.sha }}
+
+      - name: Load Docker image
+        run: gunzip -c internal-api.tar.gz | docker load
 
       - name: Initialize database schema
         run: >
@@ -111,7 +116,7 @@ jobs:
           -e DB_NAME=internal_api
           -e DB_USER=internal_api_user
           -e DB_PASSWORD=local_password
-          internal-api:test
+          internal-api:${{ github.sha }}
           python -c "from app import initialize_database; initialize_database()"
 
       - name: Start API container
@@ -123,7 +128,7 @@ jobs:
           -e DB_USER=internal_api_user
           -e DB_PASSWORD=local_password
           -e PORT=5000
-          internal-api:test
+          internal-api:${{ github.sha }}
 
       - name: Wait for API
         run: |

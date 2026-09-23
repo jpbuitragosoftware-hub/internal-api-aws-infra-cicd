@@ -61,6 +61,7 @@ resource "aws_db_instance" "this" {
   db_subnet_group_name       = aws_db_subnet_group.this.name
   vpc_security_group_ids     = [aws_security_group.this.id]
   publicly_accessible        = false
+  # Lab-oriented defaults: single-AZ, minimal backups, and easy teardown.
   multi_az                   = false
   backup_retention_period    = var.backup_retention_period
   deletion_protection        = var.deletion_protection

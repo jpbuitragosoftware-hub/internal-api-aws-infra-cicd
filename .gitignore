@@ -28,6 +28,8 @@ htmlcov/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+*.tfplan
+tfplan
 crash.log
 crash.*.log
 
@@ -36,7 +38,6 @@ crash.*.log
 *.tfvars.json
 *.auto.tfvars
 *.auto.tfvars.json
-!terraform/terraform.tfvars
 !terraform/terraform.tfvars.example
 
 # Local Terraform overrides
