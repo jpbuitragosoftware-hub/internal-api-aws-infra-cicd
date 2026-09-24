@@ -1,4 +1,5 @@
 data "aws_iam_policy_document" "task_execution_assume_role" {
+  # ECS assumes this role to pull images and publish container logs.
   statement {
     effect = "Allow"
 
@@ -31,6 +32,7 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_security_group" "this" {
+  # Tasks do not accept unsolicited inbound traffic from the internet.
   name        = var.security_group_name
   description = var.security_group_description
   vpc_id      = var.vpc_id

@@ -1,4 +1,5 @@
 data "aws_iam_policy_document" "workspace_assume_role" {
+  # Amazon Managed Grafana assumes this role to query CloudWatch.
   statement {
     effect = "Allow"
 
@@ -22,6 +23,7 @@ resource "aws_iam_role_policy_attachment" "cloudwatch" {
 }
 
 resource "aws_grafana_workspace" "this" {
+  # Use AWS SSO and CloudWatch for a managed, low-maintenance workspace.
   account_access_type      = "CURRENT_ACCOUNT"
   authentication_providers = ["AWS_SSO"]
   data_sources             = ["CLOUDWATCH"]

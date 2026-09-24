@@ -1,4 +1,5 @@
 resource "random_password" "master" {
+  # Generate the database password instead of storing one in Terraform variables.
   length           = 32
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
@@ -10,6 +11,7 @@ resource "aws_secretsmanager_secret" "database" {
 }
 
 resource "aws_secretsmanager_secret_version" "database" {
+  # ECS reads these connection values at task startup.
   secret_id = aws_secretsmanager_secret.database.id
 
   secret_string = jsonencode({
@@ -25,6 +27,7 @@ resource "aws_db_subnet_group" "this" {
 }
 
 resource "aws_security_group" "this" {
+  # PostgreSQL remains reachable only from the ECS security group.
   name        = "${var.identifier}-db"
   description = "Allow PostgreSQL access from ECS tasks."
   vpc_id      = var.vpc_id
@@ -47,6 +50,7 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_db_instance" "this" {
+  # Multi-AZ is enabled here to demonstrate database failover behavior.
   identifier                 = var.identifier
   engine                     = "postgres"
   engine_version             = var.engine_version

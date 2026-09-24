@@ -1,4 +1,5 @@
 resource "aws_sns_topic" "alarms" {
+  # Send operational alerts through one topic.
   name = "${var.name}-alarms"
 }
 
@@ -9,6 +10,7 @@ resource "aws_sns_topic_subscription" "email" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
+  # Detect sustained CPU pressure in the ECS service.
   alarm_name          = "${var.name}-ecs-cpu"
   alarm_description   = "ECS service CPU utilization is high."
   namespace           = "AWS/ECS"
@@ -49,6 +51,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_targets" {
+  # Alert when the load balancer loses healthy application targets.
   alarm_name          = "${var.name}-alb-unhealthy-targets"
   alarm_description   = "ALB has unhealthy ECS targets."
   namespace           = "AWS/ApplicationELB"
@@ -108,6 +111,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds_storage" {
+  # Protect the database from running out of available storage.
   alarm_name          = "${var.name}-rds-free-storage"
   alarm_description   = "RDS free storage is below 2 GiB."
   namespace           = "AWS/RDS"
@@ -146,6 +150,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
 }
 
 resource "aws_cloudwatch_dashboard" "this" {
+  # Keep the main ECS, ALB, and RDS signals visible in one dashboard.
   dashboard_name = "${var.name}-dashboard"
 
   dashboard_body = jsonencode({

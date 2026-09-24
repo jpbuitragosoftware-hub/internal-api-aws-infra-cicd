@@ -3,12 +3,14 @@ data "tls_certificate" "github" {
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
+  # Trust only GitHub's OIDC tokens for this deployment role.
   url             = "https://token.actions.githubusercontent.com"
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.github.certificates[0].sha1_fingerprint]
 }
 
 data "aws_iam_policy_document" "assume_role" {
+  # Restrict role assumption to the configured repository and branch subject.
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -38,6 +40,7 @@ resource "aws_iam_role" "github_actions" {
 }
 
 data "aws_iam_policy_document" "deployment" {
+  # Grant only the image-publish and ECS deployment actions used by CD.
   statement {
     effect = "Allow"
     actions = [
@@ -65,6 +68,7 @@ data "aws_iam_policy_document" "deployment" {
   }
 
   statement {
+    # AWS evaluates this read against the task-definition family.
     effect    = "Allow"
     actions   = ["ecs:DescribeTaskDefinition"]
     resources = ["*"]

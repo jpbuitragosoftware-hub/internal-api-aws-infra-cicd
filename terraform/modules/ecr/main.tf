@@ -1,4 +1,5 @@
 resource "aws_ecr_repository" "this" {
+  # Encrypt images at rest and control whether tags can be replaced.
   name                 = var.repository_name
   image_tag_mutability = var.image_tag_mutability
 
@@ -8,6 +9,7 @@ resource "aws_ecr_repository" "this" {
 }
 
 resource "aws_ecr_lifecycle_policy" "this" {
+  # Remove old images to keep registry storage predictable.
   repository = aws_ecr_repository.this.name
 
   policy = jsonencode({
