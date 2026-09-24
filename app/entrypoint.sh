@@ -1,8 +1,10 @@
 #!/bin/sh
 set -eu
 
+# Create the table before the API starts serving requests.
 python -c "from app import initialize_database; initialize_database()"
 
+# Keep custom Docker commands working in CI and smoke tests.
 if [ "$#" -gt 0 ]; then
   exec "$@"
 fi

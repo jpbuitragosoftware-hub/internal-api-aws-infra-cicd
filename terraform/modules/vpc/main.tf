@@ -1,4 +1,5 @@
 resource "aws_vpc" "this" {
+  # Enable VPC DNS so internal AWS service names resolve correctly.
   cidr_block           = var.vpc_cidr_block
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -9,6 +10,7 @@ resource "aws_internet_gateway" "this" {
 }
 
 resource "aws_subnet" "public" {
+  # Public subnets host internet-facing network components such as NAT.
   vpc_id                  = aws_vpc.this.id
   cidr_block              = var.public_subnet_cidr_block
   availability_zone       = var.availability_zone
@@ -46,6 +48,7 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "this" {
+  # Keep private subnet A's outbound path in the same Availability Zone.
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public.id
 
@@ -57,6 +60,7 @@ resource "aws_eip" "nat_b" {
 }
 
 resource "aws_nat_gateway" "b" {
+  # A second NAT keeps Availability Zone B independently routable.
   allocation_id = aws_eip.nat_b.id
   subnet_id     = aws_subnet.public_b.id
 
@@ -76,6 +80,7 @@ resource "aws_subnet" "private_b" {
 }
 
 resource "aws_route_table" "private" {
+  # Private workloads use NAT only for controlled outbound access.
   vpc_id = aws_vpc.this.id
 
   route {

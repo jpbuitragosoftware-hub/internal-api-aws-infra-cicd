@@ -1,4 +1,5 @@
 resource "aws_security_group" "this" {
+  # Limit access to HTTP requests originating inside the VPC.
   name        = "${var.name}-alb"
   description = "Security group for the internal application load balancer."
   vpc_id      = var.vpc_id
@@ -21,6 +22,7 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_lb" "this" {
+  # Keep the load balancer private because the API is internal.
   name               = var.name
   internal           = true
   load_balancer_type = "application"
@@ -29,6 +31,7 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_target_group" "this" {
+  # ECS tasks register directly by IP when using awsvpc networking.
   name        = "${var.name}-tg"
   port        = var.container_port
   protocol    = "HTTP"
@@ -36,6 +39,7 @@ resource "aws_lb_target_group" "this" {
   vpc_id      = var.vpc_id
 
   health_check {
+    # Reuse the application's database-aware health endpoint.
     enabled             = true
     path                = "/health"
     protocol            = "HTTP"
@@ -48,6 +52,7 @@ resource "aws_lb_target_group" "this" {
 }
 
 resource "aws_lb_listener" "this" {
+  # Forward internal HTTP traffic to the ECS target group.
   load_balancer_arn = aws_lb.this.arn
   port              = 80
   protocol          = "HTTP"

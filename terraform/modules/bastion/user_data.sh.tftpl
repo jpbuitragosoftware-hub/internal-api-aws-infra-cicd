@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
+# Run a small internal workload so the monitoring dashboards have data.
 cat > /opt/traffic-generator.py <<'PYTHON'
 import logging
 import random

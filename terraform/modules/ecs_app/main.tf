@@ -1,6 +1,7 @@
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "database_secret_access" {
+  # Allow the task execution role to read only this database secret.
   name = "${var.task_family}-database-secret"
   role = element(split("/", var.task_execution_role_arn), length(split("/", var.task_execution_role_arn)) - 1)
 
@@ -17,6 +18,7 @@ resource "aws_iam_role_policy" "database_secret_access" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "load_balancer" {
+  # Only the internal load balancer may reach the application port.
   security_group_id            = var.security_group_id
   referenced_security_group_id = var.load_balancer_security_group_id
   from_port                    = var.container_port
@@ -26,6 +28,7 @@ resource "aws_vpc_security_group_ingress_rule" "load_balancer" {
 }
 
 resource "aws_ecs_task_definition" "this" {
+  # Fargate tasks receive database settings without baking secrets into images.
   family                   = var.task_family
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
@@ -60,6 +63,7 @@ resource "aws_ecs_task_definition" "this" {
       ]
 
       logConfiguration = {
+        # Send application logs to CloudWatch for deployment diagnostics.
         logDriver = "awslogs"
         options = {
           awslogs-group         = var.log_group_name
@@ -72,6 +76,7 @@ resource "aws_ecs_task_definition" "this" {
 }
 
 resource "aws_ecs_service" "this" {
+  # ECS replaces unhealthy tasks and keeps the desired count running.
   name             = var.service_name
   cluster          = var.cluster_name
   task_definition  = aws_ecs_task_definition.this.arn
@@ -89,11 +94,13 @@ resource "aws_ecs_service" "this" {
   deployment_maximum_percent         = 200
 
   deployment_circuit_breaker {
+    # Automatically roll back deployments that fail to stabilize.
     enable   = true
     rollback = true
   }
 
   lifecycle {
+    # CD owns the task definition revision after Terraform creates the service.
     ignore_changes = [task_definition]
   }
 

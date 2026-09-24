@@ -7,6 +7,7 @@ app = Flask(__name__)
 
 
 def get_db_connection():
+    # Keep database access behind one small, consistently configured helper.
     connection_options = {
         "host": os.getenv("DB_HOST"),
         "port": os.getenv("DB_PORT", "5432"),
@@ -19,6 +20,7 @@ def get_db_connection():
 
 
 def initialize_database():
+    # The schema is intentionally small and safe to initialize on startup.
     connection = get_db_connection()
 
     try:
@@ -39,6 +41,7 @@ def initialize_database():
 
 @app.route("/health", methods=["GET"])
 def health():
+    # A healthy response means the application can also reach PostgreSQL.
     try:
         connection = get_db_connection()
 
@@ -57,11 +60,13 @@ def health():
 
 @app.route("/ready", methods=["GET"])
 def ready():
+    # Readiness uses the same dependency check as the health endpoint.
     return health()
 
 
 @app.route("/items", methods=["GET"])
 def get_items():
+    # Return items in insertion order to keep the demo output predictable.
     connection = get_db_connection()
 
     try:
@@ -77,6 +82,7 @@ def get_items():
 
 @app.route("/items", methods=["POST"])
 def create_item():
+    # Validate the payload before opening a database connection.
     data = request.get_json()
 
     if not data or not data.get("name"):
@@ -106,6 +112,7 @@ def create_item():
 
 
 if __name__ == "__main__":
+    # This path is useful for local execution; containers use the entrypoint.
     initialize_database()
 
     app.run(

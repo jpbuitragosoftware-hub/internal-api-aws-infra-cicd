@@ -21,6 +21,7 @@ provider "aws" {
   region = var.aws_region
 }
 
+# The VPC owns the public and private network boundaries for every service.
 module "vpc" {
   source = "./modules/vpc"
 
@@ -36,6 +37,7 @@ module "vpc" {
   private_availability_zone_b = var.private_availability_zone_b
 }
 
+# ECR stores the immutable application images used by ECS.
 module "ecr" {
   source = "./modules/ecr"
 
@@ -44,6 +46,7 @@ module "ecr" {
   image_retention_count = var.ecr_image_retention_count
 }
 
+# ECS provides the shared cluster, execution role, and logging resources.
 module "ecs" {
   source = "./modules/ecs"
 
@@ -56,6 +59,7 @@ module "ecs" {
   security_group_description = var.ecs_security_group_description
 }
 
+# The internal ALB is the only application entry point inside the VPC.
 module "alb" {
   source = "./modules/alb"
 
@@ -66,6 +70,7 @@ module "alb" {
   allowed_ingress_cidr = var.vpc_cidr_block
 }
 
+# This optional bastion provides controlled testing access through SSM.
 module "bastion" {
   source = "./modules/bastion"
 
@@ -83,6 +88,7 @@ module "bastion" {
   security_group_name       = var.bastion_security_group_name
 }
 
+# RDS stays private and exposes PostgreSQL only to the ECS security group.
 module "rds" {
   source = "./modules/rds"
 
@@ -101,6 +107,7 @@ module "rds" {
   secret_name             = var.rds_secret_name
 }
 
+# The application service runs without public IPs in the private subnets.
 module "ecs_app" {
   source = "./modules/ecs_app"
 
@@ -124,6 +131,7 @@ module "ecs_app" {
   target_group_arn                = module.alb.target_group_arn
 }
 
+# GitHub Actions uses OIDC instead of long-lived AWS access keys.
 module "github_oidc" {
   source = "./modules/github_oidc"
 
@@ -134,6 +142,7 @@ module "github_oidc" {
   task_execution_role_arn = module.ecs.execution_role_arn
 }
 
+# CloudWatch alarms and dashboards cover the main application dependencies.
 module "monitoring" {
   source = "./modules/monitoring"
 
@@ -146,6 +155,7 @@ module "monitoring" {
   notification_email      = var.monitoring_notification_email
 }
 
+# Grafana provides a dedicated view of the CloudWatch metrics.
 module "grafana" {
   source = "./modules/grafana"
 
