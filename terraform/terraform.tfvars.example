@@ -44,3 +44,13 @@ grafana_workspace_role_name    = "internal-api-grafana-workspace"
 
 github_repository_subject      = "repo:OWNER/REPOSITORY:ref:refs/heads/main"
 github_actions_role_name       = "internal-api-github-actions"
+
+# Optional temporary SSM bastion and low-rate internal ALB traffic generator.
+bastion_enabled                  = false
+bastion_name                     = "internal-api-bastion"
+bastion_subnet_type               = "private"
+bastion_traffic_paths             = ["/health", "/items"]
+bastion_traffic_interval_seconds  = 45
+bastion_instance_type             = "t3.micro"
+bastion_iam_role_name             = "internal-api-bastion"
+bastion_security_group_name       = "internal-api-bastion"

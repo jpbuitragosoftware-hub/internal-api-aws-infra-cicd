@@ -1,0 +1,55 @@
+#!/bin/bash
+set -euo pipefail
+
+cat > /opt/traffic-generator.py <<'PYTHON'
+import logging
+import random
+import time
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+
+BASE_URL = "http://${alb_dns_name}"
+PATHS = ${jsonencode(traffic_paths)}
+INTERVAL_SECONDS = ${traffic_interval_seconds}
+
+while True:
+    path = random.choice(PATHS)
+    url = BASE_URL + path
+    try:
+        request = Request(url, headers={"User-Agent": "internal-api-traffic-generator"})
+        with urlopen(request, timeout=10) as response:
+            response.read()
+            logging.info("request url=%s status=%s", url, response.status)
+    except HTTPError as error:
+        logging.error("request url=%s status=%s error=%s", url, error.code, error)
+    except (URLError, TimeoutError, OSError) as error:
+        logging.error("request url=%s error=%s", url, error)
+    time.sleep(random.uniform(INTERVAL_SECONDS * 0.75, INTERVAL_SECONDS * 1.25))
+PYTHON
+
+chmod 0755 /opt/traffic-generator.py
+
+cat > /etc/systemd/system/internal-api-traffic-generator.service <<'SERVICE'
+[Unit]
+Description=Internal API traffic generator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/traffic-generator.py
+Restart=always
+RestartSec=10
+User=root
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+systemctl daemon-reload
+systemctl enable --now internal-api-traffic-generator.service
