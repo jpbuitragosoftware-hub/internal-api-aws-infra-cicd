@@ -14,3 +14,4 @@ RUN chmod 0755 entrypoint.sh
 EXPOSE 5000
 
 ENTRYPOINT ["./entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
