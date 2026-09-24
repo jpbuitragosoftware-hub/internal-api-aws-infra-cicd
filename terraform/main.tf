@@ -26,8 +26,10 @@ module "vpc" {
 
   vpc_cidr_block              = var.vpc_cidr_block
   public_subnet_cidr_block    = var.public_subnet_cidr_block
+  public_subnet_b_cidr_block  = var.public_subnet_b_cidr_block
   public_route_cidr_block     = var.public_route_cidr_block
   availability_zone           = var.availability_zone
+  public_availability_zone_b  = var.public_availability_zone_b
   private_subnet_a_cidr_block = var.private_subnet_a_cidr_block
   private_subnet_b_cidr_block = var.private_subnet_b_cidr_block
   private_availability_zone_a = var.private_availability_zone_a
@@ -62,6 +64,23 @@ module "alb" {
   subnet_ids           = module.vpc.private_subnet_ids
   container_port       = var.ecs_container_port
   allowed_ingress_cidr = var.vpc_cidr_block
+}
+
+module "bastion" {
+  source = "./modules/bastion"
+
+  enabled                   = var.bastion_enabled
+  name                      = var.bastion_name
+  vpc_id                    = module.vpc.vpc_id
+  private_subnet_ids        = module.vpc.private_subnet_ids
+  public_subnet_ids         = module.vpc.public_subnet_ids
+  subnet_type               = var.bastion_subnet_type
+  alb_dns_name              = module.alb.dns_name
+  traffic_paths             = var.bastion_traffic_paths
+  traffic_interval_seconds  = var.bastion_traffic_interval_seconds
+  instance_type             = var.bastion_instance_type
+  iam_role_name             = var.bastion_iam_role_name
+  security_group_name       = var.bastion_security_group_name
 }
 
 module "rds" {

@@ -60,9 +60,14 @@ data "aws_iam_policy_document" "deployment" {
 
   statement {
     effect = "Allow"
+    actions = ["ecs:RegisterTaskDefinition"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
     actions = [
       "ecs:DescribeTaskDefinition",
-      "ecs:RegisterTaskDefinition",
       "ecs:RunTask"
     ]
     resources = ["arn:aws:ecs:*:*:task-definition/*"]

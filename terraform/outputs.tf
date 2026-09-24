@@ -47,3 +47,13 @@ output "grafana_endpoint" {
   description = "Amazon Managed Grafana workspace endpoint."
   value       = module.grafana.endpoint
 }
+
+output "bastion_instance_id" {
+  description = "Temporary bastion instance ID, when enabled."
+  value       = module.bastion.instance_id
+}
+
+output "bastion_security_group_id" {
+  description = "Temporary bastion security group ID, when enabled."
+  value       = module.bastion.security_group_id
+}

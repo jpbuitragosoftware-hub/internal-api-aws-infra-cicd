@@ -4,7 +4,12 @@ variable "vpc_cidr_block" {
 }
 
 variable "public_subnet_cidr_block" {
-  description = "CIDR block for the public subnet."
+  description = "CIDR block for the first public subnet."
+  type        = string
+}
+
+variable "public_subnet_b_cidr_block" {
+  description = "CIDR block for the second public subnet."
   type        = string
 }
 
@@ -14,7 +19,12 @@ variable "public_route_cidr_block" {
 }
 
 variable "availability_zone" {
-  description = "Availability Zone for the public subnet."
+  description = "Availability Zone for the first public subnet."
+  type        = string
+}
+
+variable "public_availability_zone_b" {
+  description = "Availability Zone for the second public subnet."
   type        = string
 }
 

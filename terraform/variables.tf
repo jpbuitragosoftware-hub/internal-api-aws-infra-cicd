@@ -9,7 +9,12 @@ variable "vpc_cidr_block" {
 }
 
 variable "public_subnet_cidr_block" {
-  description = "CIDR block for the public subnet."
+  description = "CIDR block for the first public subnet."
+  type        = string
+}
+
+variable "public_subnet_b_cidr_block" {
+  description = "CIDR block for the second public subnet."
   type        = string
 }
 
@@ -19,7 +24,12 @@ variable "public_route_cidr_block" {
 }
 
 variable "availability_zone" {
-  description = "Availability Zone for the public subnet."
+  description = "Availability Zone for the first public subnet."
+  type        = string
+}
+
+variable "public_availability_zone_b" {
+  description = "Availability Zone for the second public subnet."
   type        = string
 }
 
@@ -221,4 +231,57 @@ variable "github_repository_subject" {
 variable "github_actions_role_name" {
   description = "IAM role assumed by GitHub Actions."
   type        = string
+}
+
+variable "bastion_enabled" {
+  description = "Whether to create the temporary SSM bastion and traffic generator."
+  type        = bool
+  default     = false
+}
+
+variable "bastion_name" {
+  description = "Name of the temporary bastion instance."
+  type        = string
+  default     = "internal-api-bastion"
+}
+
+variable "bastion_subnet_type" {
+  description = "Subnet type for the bastion; private is recommended."
+  type        = string
+  default     = "private"
+
+  validation {
+    condition     = contains(["private", "public"], var.bastion_subnet_type)
+    error_message = "bastion_subnet_type must be private or public."
+  }
+}
+
+variable "bastion_traffic_paths" {
+  description = "Internal ALB paths used by the bastion traffic generator."
+  type        = list(string)
+  default     = ["/health", "/items"]
+}
+
+variable "bastion_traffic_interval_seconds" {
+  description = "Approximate delay between bastion traffic-generator requests."
+  type        = number
+  default     = 45
+}
+
+variable "bastion_instance_type" {
+  description = "EC2 instance type for the temporary bastion."
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "bastion_iam_role_name" {
+  description = "IAM role name for the temporary bastion."
+  type        = string
+  default     = "internal-api-bastion"
+}
+
+variable "bastion_security_group_name" {
+  description = "Security group name for the temporary bastion."
+  type        = string
+  default     = "internal-api-bastion"
 }

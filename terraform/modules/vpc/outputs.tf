@@ -4,8 +4,16 @@ output "vpc_id" {
 }
 
 output "public_subnet_id" {
-  description = "ID of the public subnet."
+  description = "ID of the first public subnet."
   value       = aws_subnet.public.id
+}
+
+output "public_subnet_ids" {
+  description = "IDs of the public subnets."
+  value = [
+    aws_subnet.public.id,
+    aws_subnet.public_b.id,
+  ]
 }
 
 output "private_subnet_ids" {
