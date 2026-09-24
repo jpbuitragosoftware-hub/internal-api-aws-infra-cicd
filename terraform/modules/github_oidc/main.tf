@@ -65,11 +65,14 @@ data "aws_iam_policy_document" "deployment" {
   }
 
   statement {
-    effect = "Allow"
-    actions = [
-      "ecs:DescribeTaskDefinition",
-      "ecs:RunTask"
-    ]
+    effect    = "Allow"
+    actions   = ["ecs:DescribeTaskDefinition"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["ecs:RunTask"]
     resources = ["arn:aws:ecs:*:*:task-definition/*"]
   }
 
